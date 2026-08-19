@@ -1,4 +1,7 @@
-import { useState } from "react";
+import Login from "./Login";
+import { getCurrentUser, signOut } from "../lib/auth";
+import { supabase } from "../lib/supabase";
+import { useEffect, useState } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 import { Button } from "./components/ui/button";
 import { DashboardPage } from "./components/DashboardPage";
@@ -60,6 +63,42 @@ const navigationItems = [
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard");
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+  const initializeAuth = async () => {
+    const currentUser = await getCurrentUser();
+
+    setUser(currentUser);
+    setAuthLoading(false);
+
+  };
+
+  initializeAuth();
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    setUser(session?.user ?? null);
+  });
+
+  return () => {
+    subscription.unsubscribe();
+  };
+}, []);
+
+if (authLoading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-muted-foreground">Loading...</p>
+    </div>
+  );
+}
+
+if (!user) {
+  return <Login />;
+}
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -123,10 +162,20 @@ export default function App() {
               <div className="px-3 py-2 text-xs text-muted-foreground">
                 Logged in as: admin@elitedrivingacademy.com
               </div>
-              <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+              <Button
+  variant="ghost"
+  onClick={async () => {
+    const { error } = await signOut();
+
+    if (error) {
+      console.error("Sign out error:", error);
+    }
+  }}
+  className="w-full justify-start text-muted-foreground hover:text-foreground"
+>
+  <LogOut className="h-4 w-4 mr-2" />
+  Sign Out
+</Button>
             </div>
           </SidebarFooter>
         </Sidebar>
@@ -156,3 +205,4 @@ export default function App() {
     </SidebarProvider>
   );
 }
+

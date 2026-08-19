@@ -1,0 +1,96 @@
+import { useState } from "react";
+import { signIn } from "../lib/auth";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+import { Label } from "./components/ui/label";
+import { Car } from "lucide-react";
+
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    setLoading(true);
+    setError("");
+
+    const { error } = await signIn(email, password);
+
+    if (error) {
+      setError(error.message);
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted/20 px-4">
+      <div className="w-full max-w-md">
+        <div className="rounded-xl border bg-background p-8 shadow-sm">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
+              <Car className="h-6 w-6 text-primary-foreground" />
+            </div>
+
+            <h1 className="text-2xl font-semibold">
+              Elite Driving
+            </h1>
+
+            <p className="mt-1 text-sm text-muted-foreground">
+              Management System
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="email">
+                Email
+              </Label>
+
+              <Input
+                id="email"
+                type="email"
+                placeholder="admin@elitedrivingacademy.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                Password
+              </Label>
+
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
